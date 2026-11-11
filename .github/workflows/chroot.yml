@@ -19,3 +19,4 @@ jobs:
           dpkg -S chroot 2>&1 | grep -E 'bin/chroot' || true
           dpkg -l | grep -E 'coreutils' || true
           unshare --map-root-user --mount --pid --fork bash -c 'command -v chroot; echo PATH=$PATH'
+          unshare --map-root-user --mount --pid --fork bash -c 'mount --make-rprivate / && exec chroot / /usr/bin/env -i PATH=/usr/bin:/bin /bin/sh -c "echo CHROOT-OK uid=\$(id -u)"'
