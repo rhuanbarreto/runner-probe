@@ -1,0 +1,33 @@
+name: probe
+on: push
+permissions: {}
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04, ubuntu-26.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./probe.sh
+      - uses: oven-sh/setup-bun@v2
+      - name: bun spawn cwd
+        run: |
+          bun --version
+          mkdir -p "$RUNNER_TEMP/cwdtest"
+          cat > t.ts <<'TS'
+          import { mkdtempSync, readFileSync, existsSync, realpathSync } from "node:fs";
+          import { join } from "node:path";
+          let bad = 0;
+          for (let i = 0; i < 200; i++) {
+            const dir = mkdtempSync(join(process.env.RUNNER_TEMP!, "c-"));
+            const marker = join(dir, "cwd.txt");
+            const c = Bun.spawn([process.execPath, "-e", `require("node:fs").writeFileSync(${JSON.stringify(marker)}, process.cwd())`], { cwd: dir, env: {} , stdin: "inherit", stdout: "inherit", stderr: "inherit"});
+            await c.exited;
+            const got = realpathSync(readFileSync(marker, "utf8"));
+            if (got !== realpathSync(dir)) { bad++; console.log("MISMATCH", got, dir); }
+          }
+          console.log("mismatches:", bad);
+          TS
+          bun t.ts
