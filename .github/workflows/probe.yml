@@ -10,7 +10,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - run: ./probe.sh
+      - run: bash ./probe.sh
       - uses: oven-sh/setup-bun@v2
       - name: bun spawn cwd
         run: |
