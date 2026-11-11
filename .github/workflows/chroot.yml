@@ -1,0 +1,21 @@
+name: chroot probe
+on: workflow_dispatch
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - run: |
+          set -x
+          echo "PATH=$PATH"
+          command -v chroot || true
+          ls -l /usr/sbin/chroot /usr/bin/chroot /sbin/chroot /bin/chroot 2>&1 || true
+          readlink -f "$(command -v chroot)" || true
+          dpkg -S "$(readlink -f "$(command -v chroot)")" 2>&1 || true
+          dpkg -S chroot 2>&1 | grep -E 'bin/chroot' || true
+          dpkg -l | grep -E 'coreutils' || true
+          unshare --map-root-user --mount --pid --fork bash -c 'command -v chroot; echo PATH=$PATH'
