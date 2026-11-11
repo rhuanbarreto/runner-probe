@@ -13,6 +13,7 @@ jobs:
           set -x
           echo "PATH=$PATH"
           command -v chroot || true
+          ls -l /usr/sbin/pivot_root /usr/bin/pivot_root 2>&1 || true
           ls -l /usr/sbin/chroot /usr/bin/chroot /sbin/chroot /bin/chroot 2>&1 || true
           readlink -f "$(command -v chroot)" || true
           dpkg -S "$(readlink -f "$(command -v chroot)")" 2>&1 || true
